@@ -1,0 +1,49 @@
+<?php
+// Get fb id
+$json = file_get_contents('php://input'); 
+$request = json_decode($json, true);
+$fb_id = $request["originalRequest"]["data"]["sender"]["id"];
+$action = $request["result"]["action"];
+
+if($action == "x"){
+// Activate typing icon
+$fb_send = set_facebook_typing_icon("typing_on", $fb_id);
+
+// Add delay, be aware that API has a 5 seconds timeout
+sleep(2);
+}
+
+// Return an empty response, so the responses you already defined in API.AI are being used
+$data["displayText"] = "";
+$data["speech"] = "";
+$data["source"] = "source";
+echo json_encode($data);
+
+// Set typing icon for a user
+function set_facebook_typing_icon($type, $sender){
+
+// type either "typing_on" or "typing_off"
+
+$url3 = 'https://graph.facebook.com/v2.8/me/messages?access_token=YOUR_TOKEN';
+/*initialize curl*/
+$ch3 = curl_init($url3);
+/*prepare response*/
+	// Specify the payload 
+	$fb_payload = '{
+	"recipient":{
+		"id":"' . $sender . '"
+		},
+		"sender_action":"'.$type.'"
+	}';
+
+/* curl setting to send a json post data */
+curl_setopt($ch3, CURLOPT_POST, 1);
+curl_setopt($ch3, CURLOPT_RETURNTRANSFER, 1);
+curl_setopt($ch3, CURLOPT_POSTFIELDS, $fb_payload);
+curl_setopt($ch3, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+$response = curl_exec($ch3);
+curl_close($ch3);
+return $response;
+}
+
+?>
